@@ -99,4 +99,10 @@ export const priorityRoutes = async (fastify) => {
             return reply.code(400).send({ error: error.message || 'Erro ao adicionar a prioridade.' });
         }
     });
+
+    // auto priority
+    fastify.get('/api/v1/autopriority/:trunk', {
+        preHandler: validateToken,
+        schema: priorityByTrunkSchema
+    }, priorityController.getAutoPriority);
 }

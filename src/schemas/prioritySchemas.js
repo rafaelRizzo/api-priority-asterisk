@@ -70,3 +70,22 @@ export const priorityDeleteSchema = {
     }
 };
 
+export const priorityAutomaticSchema = {
+    params: {
+        type: 'object',
+        required: ['trunk'],
+        properties: {
+            trunk: { type: 'string' }
+        }
+    },
+    response: {
+        201: {
+            type: 'object',
+            properties: {
+                priority: { type: 'integer' },
+                type: { type: 'string' },
+            }
+        }
+    }
+};
+

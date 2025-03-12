@@ -1,3 +1,5 @@
+//@MIGRATE return everything from here to mysql
+
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
@@ -8,7 +10,7 @@ generator client {
 }
 
 model trunks {
-  id            String  @id @default(auto()) @map("_id") @db.ObjectId// MongoDB usa _id como chave primária
+  id            String  @id @default(auto()) @map("_id") @db.ObjectId // MongoDB usa _id como chave primária
   trunkid       Int     @default(0)
   name          String  @default("") @db.String
   tech          String  @db.String
@@ -33,4 +35,10 @@ model priorities_api {
   start_date   DateTime
   end_date     DateTime?
   created_date DateTime
+}
+
+model request_log {
+  id    String   @id @default(auto()) @map("_id") @db.ObjectId
+  trunk String   @db.String
+  date  DateTime
 }
