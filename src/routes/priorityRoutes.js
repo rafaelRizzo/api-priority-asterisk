@@ -1,11 +1,9 @@
-import { cache } from "../utils/cache.js";
-import { convertToGotoIfTime } from '../utils/dateFunctions.js';
-import { priorityAddSchema, priorityByTrunkSchema, priorityDeleteSchema } from '../schemas/prioritySchemas.js';
+import { autoPriorityByTrunkSchema, priorityAddSchema, priorityByTrunkSchema, priorityDeleteSchema } from '../schemas/prioritySchemas.js';
 import { PriorityController } from "../controllers/priorityControllers.js"
 
 import { mapTrunksToCache } from "../services/priorityServices.js";
-import cron from "node-cron"
 import { validateToken } from "../middlewares/validateToken.js";
+import cron from "node-cron"
 
 const priorityController = new PriorityController();
 
@@ -85,8 +83,13 @@ export const priorityRoutes = async (fastify) => {
 
             reply.code(200).send({ content: "Prioridade deletada com sucesso." });
         } catch (error) {
-            console.log(error);
             return reply.code(500).send({ error: error.message || 'Erro ao adicionar a prioridade.' });
         }
     });
+
+    // Rota que de acordo com a quantidade de requisições a API do tronco, retornará qual a prioridade é necessaria para aquela empresa no momento
+    fastify.get('/api/v1/autopriority/:trunk', {
+        preHandler: validateToken,
+        schema: autoPriorityByTrunkSchema
+    }, priorityController.getAutoPriority);
 }

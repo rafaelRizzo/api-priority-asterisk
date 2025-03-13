@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { cache } from "../utils/cache.js";
 import { logger } from "../utils/logger.js";
+import { convertToGotoIfTime } from '../utils/dateFunctions.js';
 
 const prisma = new PrismaClient();
 
@@ -18,7 +19,10 @@ export const mapTrunksToCache = async () => {
 
         logger.debug(`Prioridades localizadas: ${JSON.stringify(priorities, null, 2)}.`);
 
+
         priorities.forEach(priority => {
+            priority.formatted_start_date = convertToGotoIfTime(priority.start_date);
+            priority.formatted_end_date = convertToGotoIfTime(priority.end_date);
             cache.set(`priority_${priority.trunk}`, priority);
         });
 

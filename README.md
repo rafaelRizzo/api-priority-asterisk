@@ -33,6 +33,12 @@ CREATE TABLE priorities_api (
     end_date     DATETIME NULL,                  -- Data e hora de término (pode ser nula)
     created_date DATETIME NOT NULL               -- Data e hora de criação
 );
+
+CREATE TABLE request_log (
+    id                      INT AUTO_INCREMENT PRIMARY KEY,
+    trunk VARCHAR(255)      NOT NULL,
+    date DATETIME           NOT NULL
+);
 ```
 
 ## 1️ Clone o repositório

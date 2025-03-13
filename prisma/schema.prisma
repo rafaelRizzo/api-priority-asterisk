@@ -33,3 +33,9 @@ model priorities_api {
   end_date     DateTime? @db.DateTime(0)
   created_date DateTime  @db.DateTime(0)
 }
+
+model request_log {
+  id    Int      @id @default(autoincrement())
+  trunk String   @db.VarChar(255)
+  date  DateTime @db.DateTime(0)
+}

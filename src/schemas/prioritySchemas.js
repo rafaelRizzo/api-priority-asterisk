@@ -10,15 +10,10 @@ export const priorityAddSchema = {
         }
     },
     response: {
-        201: {
+        200: {
             type: 'object',
             properties: {
-                id: { type: 'string' },
-                trunk: { type: 'string' },
-                priority: { type: 'integer' },
-                start_date: { type: 'string', format: 'date-time' },
-                end_date: { type: 'string', format: 'date-time' },
-                created_date: { type: 'string', format: 'date-time' }
+                content: { type: 'string' }
             }
         }
     }
@@ -33,15 +28,22 @@ export const priorityByTrunkSchema = {
         }
     },
     response: {
-        201: {
+        200: {
             type: 'object',
             properties: {
-                id: { type: 'string' },
-                trunk: { type: 'string' },
-                priority: { type: 'integer' },
-                start_date: { type: 'string', format: 'date-time' },
-                end_date: { type: 'string', format: 'date-time' },
-                created_date: { type: 'string', format: 'date-time' }
+                priority: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'string' },
+                        trunk: { type: 'string' },
+                        priority: { type: 'integer' },
+                        start_date: { type: 'string', format: 'date-time' },
+                        end_date: { type: 'string', format: 'date-time' },
+                        created_date: { type: 'string', format: 'date-time' },
+                        formatted_start_date: { type: 'string' },
+                        formatted_end_date: { type: 'string' },
+                    }
+                }
             }
         }
     }
@@ -56,17 +58,30 @@ export const priorityDeleteSchema = {
         }
     },
     response: {
-        201: {
+        200: {
             type: 'object',
             properties: {
-                id: { type: 'string' },
-                trunk: { type: 'string' },
-                priority: { type: 'integer' },
-                start_date: { type: 'string', format: 'date-time' },
-                end_date: { type: 'string', format: 'date-time' },
-                created_date: { type: 'string', format: 'date-time' }
+                content: { type: 'string' }
             }
         }
     }
 };
 
+export const autoPriorityByTrunkSchema = {
+    params: {
+        type: 'object',
+        required: ['trunk'],
+        properties: {
+            trunk: { type: 'string' }
+        }
+    },
+    response: {
+        200: {
+            type: 'object',
+            properties: {
+                type: { type: 'string' },
+                priority: { type: 'number' }
+            }
+        }
+    }
+};

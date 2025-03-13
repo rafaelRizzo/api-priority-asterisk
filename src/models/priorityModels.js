@@ -122,4 +122,53 @@ export class PriorityModel {
             throw error;
         }
     }
+
+    registerRequest = async ({ trunk }) => {
+        try {
+            const existing_trunks = await prisma.trunks.findFirst({
+                where: { channelid: trunk }
+            });
+
+            if (!existing_trunks) {
+                throw new Error(`Tronco não encontrado.`);
+            }
+
+            logger.debug("Tronco localizado, continuando...");
+
+            // this does not need to be upsert, just create a new request log
+            const register_request_query = await prisma.request_log.create({
+                data: {
+                    trunk: trunk,
+                    date: new Date(),
+                }
+            });
+
+            logger.info(`Requisição registrada com sucesso.`);
+            logger.debug(`Requisição registrada com sucesso: ${JSON.stringify(register_request_query, null, 2)}.`);
+            return true;
+        } catch (error) {
+            logger.error(`Ocorreu um erro ao registrar a requisição: ${error}.`);
+            throw error;
+        }
+    }
+
+    getRequestVolume = async ({ trunk, days }) => {
+        try {
+            const start_date = new Date(new Date().setDate(new Date().getDate() - days));
+            const get_request_volume_query = await prisma.request_log.findMany({
+                where: {
+                    trunk: trunk,
+                    date: {
+                        gte: start_date
+                    },
+                },
+            });
+            logger.info(`Volume de requisições recuperado com sucesso.`);
+            logger.debug(`Volume de requisições recuperado com sucesso: ${JSON.stringify(get_request_volume_query, null, 2)}.`);
+            return get_request_volume_query;
+        } catch (error) {
+            logger.error(`Ocorreu um erro ao buscar o volume de requisições: ${error}.`);
+            throw error;
+        }
+    }
 }

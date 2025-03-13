@@ -1,7 +1,9 @@
 import { PriorityModel } from "../models/priorityModels.js";
 import { cache } from "../utils/cache.js";
 import { convertToISO } from "../utils/dateFunctions.js";
+import { calculatePriority } from "../utils/handlers.js";
 import { logger } from "../utils/logger.js";
+import { convertToGotoIfTime } from '../utils/dateFunctions.js'; // TODO: VER DEPOIS SE PRECISA DESSA FUNÇÃO ACREDITO QUE ELA FOI REMOVIDA INDEVIDAMENTE E ERA PARA SER UTILIZADA PARA GERAR O GOTOIF TIME NA RESPOSTA DA API
 
 const priorityModel = new PriorityModel();
 
@@ -66,4 +68,44 @@ export class PriorityController {
         const priority_data = await priorityModel.deletePriority({ trunk });
         return priority_data;
     }
+
+    getAutoPriority = async (request, reply) => {
+        const { trunk } = request.params;
+        const { noreg } = request.query; // geralmente para depuração no Postman
+        const shouldRegisterRequests = noreg !== "true";
+
+        try {
+            if (shouldRegisterRequests) await priorityModel.registerRequest({ trunk });
+
+            let priorities_data_cache = cache.get(`priority_${trunk}`);
+
+            if (priorities_data_cache) {
+                // encontrado no cache: retornar com prioridade manual
+                logger.info(`Prioridade encontrada no cache para o tronco ${trunk}.`);
+                logger.debug(`Prioridade encontrada no cache para o tronco ${trunk}: ${JSON.stringify(priorities_data_cache, null, 2)}.`);
+
+                const formattedPriority = {
+                    type: "manual", // tipo manual
+                    priority: priorities_data_cache.priority,
+                };
+
+                return reply.code(200).send(formattedPriority);
+            }
+
+            // sem prioridade manual, calcular a prioridade automaticamente
+            logger.debug(`Não há prioridade manual no cache para o tronco ${trunk}.`);
+            const request_volume_data = await priorityModel.getRequestVolume({ trunk, days: 30 });
+            const request_quantity = request_volume_data.length; // quantidade de requisições feitas no período
+            const calculated_priority = calculatePriority(request_volume_data);
+
+            return reply.code(200).send({
+                type: "auto", // tipo automático
+                priority: calculated_priority
+            });
+
+        } catch (error) {
+            console.error("Erro ao obter prioridade automática:", error);
+            return reply.status(500).send("Erro interno ao processar a solicitação");
+        }
+    };
 }
