@@ -33,9 +33,8 @@ const calculatePriority = (request_volume_data) => {
 
     let priority = PRIORITY_MAX - Math.min(PRIORITY_MAX, Math.floor(Math.log2(1 + S + M / 2 + L)));
 
-    console.log(`FORMULA : PRIORITY_MAX - log2(1 + S + M/2 + L)`);
-    console.log(`FILLED  : ${PRIORITY_MAX} - log2(1 + ${S} + ${M / 2} + ${L}) = ${priority}`);
-    console.log(`RESULT  : ${priority}`);
+    logger.debug(`FORMULA  : ${PRIORITY_MAX} - log2(1 + ${S} + ${M / 2} + ${L}) = ${priority} (PRIORITY_MAX - log2(1 + S + M/2 + L))`);
+    logger.debug(`RESULT   : ${priority}`);
 
     return priority;
 };
