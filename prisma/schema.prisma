@@ -1,44 +1,41 @@
-//@MIGRATE return everything from here to mysql
-
-datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-model trunks {
-  id            String  @id @default(auto()) @map("_id") @db.ObjectId // MongoDB usa _id como chave primária
-  trunkid       Int     @default(0)
-  name          String  @default("") @db.String
-  tech          String  @db.String
-  outcid        String  @default("") @db.String
-  keepcid       String? @default("off") @db.String
-  maxchans      String? @default("") @db.String
-  failscript    String  @default("") @db.String
-  dialoutprefix String  @default("") @db.String
-  channelid     String  @default("") @db.String
-  usercontext   String? @db.String
-  provider      String? @db.String
-  disabled      String? @default("off") @db.String
-  continue      String? @default("off") @db.String
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
 
-  @@unique([trunkid, tech, channelid]) // MongoDB não suporta @@id composto, mas pode usar índice único
+model trunks {
+  trunkid       Int     @default(0)
+  name          String  @default(dbgenerated("()")) @db.VarChar(50)
+  tech          String  @db.VarChar(20)
+  outcid        String  @default(dbgenerated("()")) @db.VarChar(40)
+  keepcid       String? @default(dbgenerated("(off)")) @db.VarChar(4)
+  maxchans      String? @default(dbgenerated("()")) @db.VarChar(6)
+  failscript    String  @default(dbgenerated("()")) @db.VarChar(255)
+  dialoutprefix String  @default(dbgenerated("()")) @db.VarChar(255)
+  channelid     String  @default(dbgenerated("()")) @db.VarChar(255)
+  usercontext   String? @db.VarChar(255)
+  provider      String? @db.VarChar(40)
+  disabled      String? @default(dbgenerated("(off)")) @db.VarChar(4)
+  continue      String? @default(dbgenerated("(off)")) @db.VarChar(4)
+
+  @@id([trunkid, tech, channelid])
 }
 
 model priorities_api {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  trunk        String    @unique @db.String
+  id           String    @id @db.VarChar(36)
+  trunk        String    @unique @db.VarChar(255)
   priority     Int       @default(1)
-  start_date   DateTime
-  end_date     DateTime?
-  created_date DateTime
+  start_date   DateTime  @db.DateTime(0)
+  end_date     DateTime? @db.DateTime(0)
+  created_date DateTime  @db.DateTime(0)
 }
 
 model request_log {
-  id    String   @id @default(auto()) @map("_id") @db.ObjectId
-  trunk String   @db.String
-  date  DateTime
+  id     Int      @id @default(autoincrement())
+  trunk  String   @db.VarChar(255)
+  date   DateTime
 }

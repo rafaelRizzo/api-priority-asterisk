@@ -34,7 +34,7 @@ export class PriorityModel {
                     end_date: end_date,
                 },
                 create: {
-                    // id: generateUUID(), // @MIGRATE uncomment this
+                    id: generateUUID(),
                     trunk: trunk,
                     priority: priority,
                     start_date: start_date,
