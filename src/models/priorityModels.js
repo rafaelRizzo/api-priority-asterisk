@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { logger } from "../utils/logger.js";
 import { generateUUID } from "../utils/handlers.js"
 import { cache } from '../utils/cache.js';
+import { mapTrunksToCache } from '../services/priorityServices.js';
 
 /**
  * 
@@ -44,6 +45,9 @@ export class PriorityModel {
 
             logger.info(`Prioridade adicionada ou atualizada com sucesso.`);
             logger.debug(`Prioridade adicionada ou atualizada com sucesso: ${JSON.stringify(add_priority_query, null, 2)}.`);
+
+            // Atualizando o cache com as prioridades
+            await mapTrunksToCache();
         } catch (error) {
             logger.error(`Ocorreu um erro ao buscar ou adicionar o tronco: ${error}.`);
             throw error;
@@ -57,7 +61,7 @@ export class PriorityModel {
             logger.debug("Prioridades recuperadas do cache.");
             return cached_priorities;
         }
-        
+
         try {
             const get_all_priority_query = await prisma.priorities_api.findMany();
 
@@ -75,8 +79,15 @@ export class PriorityModel {
                 where: { trunk: trunk }
             });
 
-            logger.debug(`Prioridades localizadas para o tronco ${trunk}: ${JSON.stringify(get_priority_by_trunk_query, null, 2)}.`);
-            return get_priority_by_trunk_query;
+            if (get_priority_by_trunk_query) {
+                logger.debug(`Prioridade localizada para o tronco ${trunk}: ${JSON.stringify(get_priority_by_trunk_query, null, 2)}.`);
+
+                return get_priority_by_trunk_query;
+            } else {
+                logger.info(`Nenhuma prioridade encontrada para o tronco: ${trunk}.`);
+                throw new Error(`Nenhuma prioridade encontrada para o tronco.`);
+            }
+
         } catch (error) {
             logger.error(`Ocorreu um erro ao buscar ou adicionar o tronco: ${error}.`);
             throw error;
@@ -97,6 +108,10 @@ export class PriorityModel {
 
                 logger.info(`Prioridade deletada com sucesso.`);
                 logger.debug(`Prioridade deletada com sucesso: ${JSON.stringify(delete_priority_query, null, 2)}`);
+
+                // Atualizando o cache com as prioridades
+                await mapTrunksToCache();
+
                 return true;
             } else {
                 logger.info(`Prioridade não encontrada para o tronco: ${trunk}.`);

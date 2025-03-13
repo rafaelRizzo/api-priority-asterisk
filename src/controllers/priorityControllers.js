@@ -58,19 +58,39 @@ export class PriorityController {
 
     getAllPriority = async () => {
         let priorities_data_cache = cache.get("priorities");
-        let priorities_data;
 
-        if (!priorities_data_cache) {
-            priorities_data = await priorityModel.getAllPriority();
+        if (priorities_data_cache) {
+            logger.debug("Dados carregados do cache");
+            return priorities_data_cache; // Retorna do cache se existir
         }
 
+        logger.debug("Buscando dados do banco...");
+        let priorities_data = await priorityModel.getAllPriority();
+
+        // Salva os dados no cache para futuras requisições
+        cache.set("priorities", priorities_data);
+
         return priorities_data;
-    }
+    };
 
     getByTrunkPriority = async ({ trunk }) => {
+        // Primeiro, tenta buscar no cache diretamente pela chave do tronco
+        let priority_data_cache = cache.get(`priority_${trunk}`);
+
+        if (priority_data_cache) {
+            logger.debug(`Prioridade do cache encontrada para o tronco: ${trunk}`);
+            return priority_data_cache;
+        }
+
+        logger.debug(`Buscando prioridade no banco para o tronco: ${trunk}`);
         const priority_data = await priorityModel.getByTrunkPriority({ trunk });
+
+        // Se encontrar no banco, adiciona no cache diretamente com a chave do tronco
+        cache.set(`priority_${trunk}`, priority_data); // Armazena o dado no cache com a chave do tronco
+        logger.debug(`Prioridade do tronco ${trunk} adicionada ao cache.`);
+
         return priority_data;
-    }
+    };
 
     deletePriority = async ({ trunk }) => {
         const priority_data = await priorityModel.deletePriority({ trunk });

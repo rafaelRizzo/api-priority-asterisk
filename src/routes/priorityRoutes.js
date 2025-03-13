@@ -19,9 +19,8 @@ const priorityController = new PriorityController();
 // Mapeamento dos troncos e sua correspoondente prioridade na inicialização
 await mapTrunksToCache();
 
-
-// Atualizo a cada 10 e coloco no cache
-cron.schedule('* * * * *', async () => {
+// Atualizo a cada 10min e coloco no cache
+cron.schedule('*/10 * * * *', async () => {
     await mapTrunksToCache();
 });
 
@@ -40,7 +39,7 @@ export const priorityRoutes = async (fastify) => {
             return reply.code(200).send({ content: "Prioridade adicionada com sucesso." });
         } catch (error) {
             // Aqui você retorna o erro com a mensagem adequada
-            return reply.code(400).send({ error: error.message || 'Erro ao adicionar a prioridade.' });
+            return reply.code(500).send({ error: error.message || 'Erro ao adicionar a prioridade.' });
         }
     });
 
@@ -48,11 +47,16 @@ export const priorityRoutes = async (fastify) => {
     fastify.get('/api/v1/priority', {
         preHandler: validateToken
     }, async (request, reply) => {
-        const priorities_data = await priorityController.getAllPriority();
+        try {
+            const priorities_data = await priorityController.getAllPriority();
 
-        return reply.code(200).send({ priorities: priorities_data });
+            return reply.code(200).send({ priorities: priorities_data });
+        } catch (error) {
+            return reply.code(500).send({ error: error.message || 'Erro ao listar as prioridades.' });
+        }
     });
 
+    /// Rota para listar prioridade pelo nome do tronco
     fastify.get('/api/v1/priority/:trunk', {
         preHandler: validateToken,
         schema: priorityByTrunkSchema
@@ -60,43 +64,29 @@ export const priorityRoutes = async (fastify) => {
         const { trunk } = request.params;
 
         try {
-            let priorities_data_cache = cache.get(`priority_${trunk}`);
+            const prioritiy_data = await priorityController.getByTrunkPriority({ trunk });
 
-            if (!priorities_data_cache) {
-                // Caso o cache não exista, retorna erro informando que o dado não está disponível
-                console.log(`Cache não encontrado para o tronco ${trunk}`);
-
-                return reply.code(404).send({ error: "Nenhuma prioridade encontrada no cache para o tronco informado" });
-            }
-
-            // Adicionando as propriedades formatadas diretamente no objeto
-            const formattedPriority = {
-                ...priorities_data_cache,
-                formatted_start_date: convertToGotoIfTime(priorities_data_cache.start_date),
-                formatted_end_date: convertToGotoIfTime(priorities_data_cache.end_date)
-            };
-
-            return reply.code(200).send({ priorities: formattedPriority });
+            return reply.code(200).send({ priority: prioritiy_data });
         } catch (error) {
-            console.error("Erro ao processar a solicitação:", error);
-            return reply.code(500).send({ error: "Erro interno ao processar a solicitação" });
+            return reply.code(500).send({ error: error.message || 'Erro ao listar a prioridade do tronco.' });
         }
     });
 
     // Rota para deletar uma prioridade pelo nome do tronco
-    fastify.delete('/api/v1/priority/:trunk', { 
+    fastify.delete('/api/v1/priority/:trunk', {
         preHandler: validateToken,
-        schema: priorityDeleteSchema 
+        schema: priorityDeleteSchema
     }, async (request, reply) => {
         // Pegando os dados passados no body da requisição
         const { trunk } = request.params;
 
         try {
             await priorityController.deletePriority({ trunk })
+
             reply.code(200).send({ content: "Prioridade deletada com sucesso." });
         } catch (error) {
             console.log(error);
-            return reply.code(400).send({ error: error.message || 'Erro ao adicionar a prioridade.' });
+            return reply.code(500).send({ error: error.message || 'Erro ao adicionar a prioridade.' });
         }
     });
 

@@ -13,7 +13,6 @@
   "dependencies": {
     "@fastify/cors": "^10.0.2",
     "@prisma/client": "^6.3.1",
-    "axios": "^1.7.9",
     "bull": "^4.16.5",
     "fastify": "^5.2.1",
     "moment-timezone": "^0.5.47",
