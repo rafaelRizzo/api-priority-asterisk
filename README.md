@@ -47,10 +47,10 @@ CREATE TABLE request_log (
 ## 2️ Instale as dependências
 `npm install`
 
-## 2️ Instale as dependências
+## 3 Gere o schema o schema do prisma client
 `npx prisma generate`
 
-## 3️ Configure o .env do projeto e execute:
+## 4 Configure o .env do projeto e execute:
 `npm run dev`
 
 # ⚠️ IMPORTANTE: NÃO EXECUTE prisma migrate ou prisma push!
