@@ -14,59 +14,111 @@ const priorityModel = new PriorityModel();
 */
 
 export class PriorityController {
-    addPriority = async ({ trunk, priority, start_date, end_date, created_date }) => {
+    addPriority = async (request, reply) => {
+        let { trunk, priority, start_date, end_date } = request.body;
+
         const now = new Date();
+
+        // Obtendo a data atual com UTC-3 no formato ISO
+        const created_date = convertToISO(new Date());
 
         // Se não for passado start_date e end_date, definir valores padrão
         start_date = start_date ? convertToISO(start_date) : convertToISO(now);
         end_date = end_date ? convertToISO(end_date) : convertToISO(new Date(now.setFullYear(now.getFullYear() + 100)));
 
-        // Obtendo a data atual com UTC-3 no formato ISO
-        created_date = convertToISO(new Date());
+        try {
+            // Chama a função addPriority e aguarda a conclusão
+            await priorityModel.addPriority({ trunk, priority, start_date, end_date, created_date });
 
-        const priority_data = await priorityModel.addPriority({ trunk, priority, start_date, end_date, created_date });
-        return priority_data;
+            return reply.code(200).send({ content: "Prioridade adicionada com sucesso." });
+        } catch (error) {
+            // Aqui você retorna o erro com a mensagem adequada
+            return reply.code(500).send({ error: error.message || 'Erro ao adicionar a prioridade.' });
+        }
     }
 
-    getAllPriority = async () => {
-        let priorities_data_cache = cache.get("priorities");
+    getAllPriority = async (request, reply) => {
+        try {
+            let priorities_data_cache = cache.get("priorities");
 
-        if (priorities_data_cache) {
-            logger.debug("Dados carregados do cache");
-            return priorities_data_cache; // Retorna do cache se existir
+            if (priorities_data_cache) {
+                logger.debug("Dados carregados do cache.");
+            } else {
+                logger.debug("Buscando dados do banco...");
+                priorities_data_cache = await priorityModel.getAllPriority();
+                cache.set("priorities", priorities_data_cache);
+                logger.debug("Dados das prioridades armazenados no cache.");
+            }
+
+            return reply.code(200).send(priorities_data_cache);
+        } catch (error) {
+            logger.error(`Erro ao listar as prioridades: ${error.message}`);
+            return reply.code(500).send({ error: 'Erro ao listar as prioridades.' });
         }
-
-        logger.debug("Buscando dados do banco...");
-        let priorities_data = await priorityModel.getAllPriority();
-
-        // Salva os dados no cache para futuras requisições
-        cache.set("priorities", priorities_data);
-
-        return priorities_data;
     };
 
-    getByTrunkPriority = async ({ trunk }) => {
-        // Primeiro, tenta buscar no cache diretamente pela chave do tronco
-        let priority_data_cache = cache.get(`priority_${trunk}`);
+    getByTrunkPriority = async (request, reply) => {
+        const { trunk } = request.params;
 
-        if (priority_data_cache) {
-            logger.debug(`Prioridade do cache encontrada para o tronco: ${trunk}`);
-            return priority_data_cache;
+        try {
+            let priority_data_cache = cache.get(`priority_${trunk}`);
+
+            if (priority_data_cache) {
+                logger.debug(`Prioridade carregada do cache para o tronco: ${trunk}`);
+            } else {
+                logger.debug(`Buscando prioridade no banco para o tronco: ${trunk}`);
+                priority_data_cache = await priorityModel.getByTrunkPriority({ trunk });
+
+                if (priority_data_cache) {
+                    cache.set(`priority_${trunk}`, priority_data_cache);
+                    logger.debug(`Prioridade do tronco ${trunk} armazenada no cache.`);
+                }
+            }
+
+            return reply.code(200).send(priority_data_cache);
+        } catch (error) {
+            logger.error(`Erro ao listar a prioridade do tronco ${trunk}: ${error.message}`);
+            return reply.code(500).send({ error: 'Erro ao listar a prioridade do tronco.' });
         }
-
-        logger.debug(`Buscando prioridade no banco para o tronco: ${trunk}`);
-        const priority_data = await priorityModel.getByTrunkPriority({ trunk });
-
-        // Se encontrar no banco, adiciona no cache diretamente com a chave do tronco
-        cache.set(`priority_${trunk}`, priority_data); // Armazena o dado no cache com a chave do tronco
-        logger.debug(`Prioridade do tronco ${trunk} adicionada ao cache.`);
-
-        return priority_data;
     };
 
-    deletePriority = async ({ trunk }) => {
-        const priority_data = await priorityModel.deletePriority({ trunk });
-        return priority_data;
+    getByTrunkPriority = async (request, reply) => {
+        const { trunk } = request.params;
+
+        try {
+            let priority_data_cache = cache.get(`priority_${trunk}`);
+
+            if (priority_data_cache) {
+                logger.debug(`Prioridade carregada do cache para o tronco: ${trunk}`);
+            } else {
+                logger.debug(`Buscando prioridade no banco para o tronco: ${trunk}`);
+                priority_data_cache = await priorityModel.getByTrunkPriority({ trunk });
+
+                if (priority_data_cache) {
+                    cache.set(`priority_${trunk}`, priority_data_cache);
+                    logger.debug(`Prioridade do tronco ${trunk} armazenada no cache.`);
+                }
+            }
+
+            return reply.code(200).send({ priority: priority_data_cache });
+        } catch (error) {
+            logger.error(`Erro ao listar a prioridade do tronco ${trunk}: ${error.message}`);
+            return reply.code(500).send({ error: 'Erro ao listar a prioridade do tronco.' });
+        }
+    };
+
+    deletePriority = async (request, reply) => {
+        // Pegando os dados passados no body da requisição
+        const { trunk } = request.params;
+
+        try {
+            await priorityModel.deletePriority({ trunk });
+
+            reply.code(200).send({ content: "Prioridade deletada com sucesso." });
+        } catch (error) {
+            return reply.code(500).send({ error: error.message || 'Erro ao adicionar a prioridade.' });
+        }
+
     }
 
     getAutoPriority = async (request, reply) => {
