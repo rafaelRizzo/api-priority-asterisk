@@ -15,7 +15,7 @@ const priorityModel = new PriorityModel();
 
 export class PriorityController {
     addPriority = async (request, reply) => {
-        let { trunk, priority, start_date, end_date } = request.body;
+        let { trunk, priority, start_date, end_date, force_exten } = request.body;
 
         const now = new Date();
 
@@ -27,8 +27,19 @@ export class PriorityController {
         end_date = end_date ? convertToISO(end_date) : convertToISO(new Date(now.setFullYear(now.getFullYear() + 100)));
 
         try {
-            // Chama a função addPriority e aguarda a conclusão
-            await priorityModel.addPriority({ trunk, priority, start_date, end_date, created_date });
+            // Permitir múltiplos troncos separados por vírgula
+            const trunks = trunk.split(",").map(t => t.trim());
+
+            for (const t of trunks) {
+                await priorityModel.addPriority({
+                    trunk: t,
+                    priority,
+                    start_date,
+                    end_date,
+                    created_date,
+                    force_exten
+                });
+            }
 
             return reply.code(200).send({ content: "Prioridade adicionada com sucesso." });
         } catch (error) {

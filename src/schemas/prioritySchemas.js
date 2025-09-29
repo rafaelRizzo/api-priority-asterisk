@@ -3,6 +3,7 @@ export const priorityAddSchema = {
         type: 'object',
         required: ['trunk', 'priority'],
         properties: {
+            force_exten: { type: 'boolean', default: false }
             trunk: { type: 'string' },
             priority: { type: 'integer', minimum: 1, maximum: 10 },
             start_date: { type: 'string', pattern: "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$" },

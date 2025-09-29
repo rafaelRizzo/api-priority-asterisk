@@ -13,17 +13,20 @@ import { mapTrunksToCache } from '../services/priorityServices.js';
 const prisma = new PrismaClient();
 
 export class PriorityModel {
-    addPriority = async ({ trunk, priority, start_date, end_date, created_date }) => {
+    addPriority = async ({ trunk, priority, start_date, end_date, created_date, force_exten }) => {
         try {
-            const existing_trunks = await prisma.trunks.findFirst({
-                where: { channelid: trunk }
-            });
 
-            if (!existing_trunks) {
-                throw new Error(`Tronco não encontrado.`);
+            if (!force_exten) {
+                const existing_trunks = await prisma.trunks.findFirst({
+                    where: { channelid: trunk }
+                });
+
+                if (!existing_trunks) {
+                    throw new Error(`Tronco não encontrado.`);
+                }
+
+                logger.debug("Tronco localizado, continuando...");
             }
-
-            logger.debug("Tronco localizado, continuando...");
 
             // Upsert: se existir, atualiza; se não, cria
             const add_priority_query = await prisma.priorities_api.upsert({
